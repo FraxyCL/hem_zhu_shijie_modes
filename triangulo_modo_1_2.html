@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <title>Triángulo de Zhu Shijie</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      background-color: #f9f9f9;
+      text-align: center;
+      padding: 20px;
+    }
+
+    .button-container {
+      margin-bottom: 20px;
+    }
+
+    button {
+      font-size: 16px;
+      margin: 5px;
+      padding: 10px 20px;
+      cursor: pointer;
+    }
+
+    .row {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      margin: 5px 0;
+    }
+
+    .cell {
+      width: 40px;
+      height: 40px;
+      margin: 2px;
+      text-align: center;
+      line-height: 40px;
+      background: #e0e0e0;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .cell.input {
+      background: #ffffff;
+      border: 1px solid #ccc;
+    }
+
+    .sum-input {
+      margin-left: 10px;
+      width: 60px;
+      height: 36px;
+      text-align: center;
+      font-size: 16px;
+    }
+
+    .correct {
+      background-color: #a5d6a7 !important;
+    }
+
+    .incorrect {
+      background-color: #ef9a9a !important;
+    }
+
+    .highlight {
+      background-color: #ffcc80 !important;
+    }
+
+    #game-area {
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Triángulo de Zhu Shijie</h1>
+
+  <div class="button-container">
+
+    <button onclick="setMode(1)">Modo 1: Completa el triángulo</button>
+    <button onclick="setMode(2)">Modo 2: Encuentra el valor</button>
+    <button onclick="setMode(3)">Modo 3: Desafío combinatorio</button>
+  </div>
+
+  <div id="game-area"></div>
+
+  <script>
+    const NUM_FILAS = 8;
+    let currentMode = 1;
+    let targetValue = null;
+
+    function binomial(n, k) {
+      if (k === 0 || k === n) return 1;
+      let res = 1;
+      for (let i = 1; i <= k; i++) {
+        res *= (n - i + 1) / i;
+      }
+      return Math.round(res);
+    }
+
+    function setMode(mode) {
+      currentMode = mode;
+      const gameArea = document.getElementById("game-area");
+      gameArea.innerHTML = "";
+      if (mode === 1) {
+        renderCompleteTriangle(gameArea);
+      } else if (mode === 2) {
+        renderFindValue(gameArea);
+      } else if (mode === 3) {
+        renderCombinatorialChallenge(gameArea);
+    }
+
+
+
+    function renderCompleteTriangle(container) {
+      const title = document.createElement("h2");
+      title.textContent = "Modo 1: Completa el triángulo";
+      container.appendChild(title);
+
+      const triangleContainer = document.createElement("div");
+      triangleContainer.id = "triangle-container";
+      container.appendChild(triangleContainer);
+
+      const checkBtn = document.createElement("button");
+      checkBtn.textContent = "Verificar respuestas";
+      checkBtn.onclick = checkAnswers;
+      container.appendChild(checkBtn);
+
+      for (let n = 0; n < NUM_FILAS; n++) {
+        const rowDiv = document.createElement("div");
+        rowDiv.className = "row";
+        let rowSum = 0;
+
+        for (let k = 0; k <= n; k++) {
+          const value = binomial(n, k);
+          rowSum += value;
+          const showValue = n < 3 || Math.random() > 0.4;
+
+          if (showValue) {
+            const cell = document.createElement("div");
+            cell.className = "cell";
+            cell.textContent = value;
+            rowDiv.appendChild(cell);
+          } else {
+            const input = document.createElement("input");
+            input.type = "number";
+            input.className = "cell input";
+            input.dataset.correct = value;
+            rowDiv.appendChild(input);
+          }
+        }
+
+        const sumInput = document.createElement("input");
+        sumInput.type = "number";
+        sumInput.className = "sum-input";
+        if (n < 4) {
+          sumInput.value = rowSum;
+          sumInput.disabled = true;
+        } else {
+          sumInput.placeholder = "?";
+          sumInput.dataset.correct = rowSum;
+        }
+        rowDiv.appendChild(sumInput);
+
+        triangleContainer.appendChild(rowDiv);
+      }
+    }
+
+    function checkAnswers() {
+      const inputs = document.querySelectorAll(".cell.input");
+      inputs.forEach(input => {
+        const correct = parseInt(input.dataset.correct);
+        const user = parseInt(input.value);
+        if (user === correct) {
+          input.classList.add("correct");
+          input.classList.remove("incorrect");
+        } else {
+          input.classList.add("incorrect");
+          input.classList.remove("correct");
+        }
+      });
+
+      const sums = document.querySelectorAll(".sum-input:not(:disabled)");
+      sums.forEach(input => {
+        const correct = parseInt(input.dataset.correct);
+        const user = parseInt(input.value);
+        if (user === correct) {
+          input.classList.add("correct");
+          input.classList.remove("incorrect");
+        } else {
+          input.classList.add("incorrect");
+          input.classList.remove("correct");
+        }
+      });
+    }
+
+    function renderFindValue(container) {
+      container.innerHTML = "";
+      const title = document.createElement("h2");
+      title.textContent = "Modo 2: Encuentra el valor";
+      container.appendChild(title);
+
+      const instruction = document.createElement("p");
+      instruction.id = "target-instruction";
+      container.appendChild(instruction);
+
+      const triangleContainer = document.createElement("div");
+      triangleContainer.id = "triangle-container";
+      container.appendChild(triangleContainer);
+
+      let allCells = [];
+      for (let n = 0; n < NUM_FILAS; n++) {
+        const rowDiv = document.createElement("div");
+        rowDiv.className = "row";
+
+        for (let k = 0; k <= n; k++) {
+          const value = binomial(n, k);
+          const cell = document.createElement("div");
+          cell.className = "cell";
+          cell.textContent = value;
+          cell.dataset.value = value;
+          cell.onclick = () => checkSelection(cell);
+          allCells.push(cell);
+          rowDiv.appendChild(cell);
+        }
+        triangleContainer.appendChild(rowDiv);
+      }
+
+      // Escoger un valor aleatorio a encontrar
+      const randomCell = allCells[Math.floor(Math.random() * allCells.length)];
+      targetValue = parseInt(randomCell.dataset.value);
+      instruction.textContent = `Haz clic en el número: ${targetValue}`;
+    }
+
+    function checkSelection(cell) {
+      const selected = parseInt(cell.dataset.value);
+      if (selected === targetValue) {
+        cell.classList.add("correct");
+        alert("¡Correcto! 🎉");
+        setMode(2); // Reiniciar desafío
+      } else {
+        cell.classList.add("incorrect");
+        setTimeout(() => cell.classList.remove("incorrect"), 1000);
+      }
+    }
+
+    // Inicializar con modo 1
+     function renderCombinatorialChallenge(container) {
+      const title = document.createElement("h2");
+      title.textContent = "Modo 3: Desafío combinatorio";
+      container.appendChild(title);
+
+      const instruction = document.createElement("p");
+      instruction.id = "combi-instruction";
+      container.appendChild(instruction);
+
+      const triangleContainer = document.createElement("div");
+      triangleContainer.id = "triangle-container";
+      container.appendChild(triangleContainer);
+
+      let allCells = [];
+      for (let n = 0; n < NUM_FILAS; n++) {
+        const rowDiv = document.createElement("div");
+        rowDiv.className = "row";
+        for (let k = 0; k <= n; k++) {
+          const value = binomial(n, k);
+          const cell = document.createElement("div");
+          cell.className = "cell";
+          cell.textContent = `${value}`;
+          cell.dataset.n = n;
+          cell.dataset.k = k;
+          cell.onclick = () => checkCombi(cell);
+          allCells.push(cell);
+          rowDiv.appendChild(cell);
+        }
+        triangleContainer.appendChild(rowDiv);
+      }
+
+      let target = {};
+      function setNewChallenge() {
+        const random = allCells[Math.floor(Math.random() * allCells.length)];
+        target.n = parseInt(random.dataset.n);
+        target.k = parseInt(random.dataset.k);
+        instruction.textContent = `¿Dónde está C(${target.n}, ${target.k})?`;
+      }
+
+      function checkCombi(cell) {
+        const n = parseInt(cell.dataset.n);
+        const k = parseInt(cell.dataset.k);
+        if (n === target.n && k === target.k) {
+          cell.classList.add("correct");
+          setTimeout(() => {
+            setMode(3);
+          }, 800);
+        } else {
+          cell.classList.add("incorrect");
+          setTimeout(() => cell.classList.remove("incorrect"), 1000);
+        }
+      }
+
+      setNewChallenge();
+    }
+    }
+    setMode(1);
+  </script>
+</body>
+</html>
+
+    
